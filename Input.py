@@ -8,11 +8,16 @@ class Input():
 
         self._keyState = False
         
-    def State(self) -> bool :
+    def BoolValue(self) -> bool :
         return self._keyState
+    
+    def FloatValue(self) -> float :
+        if (self._keyState):
+            return 1
+        return 0
 
-    def _OnKeyDown(self):
+    def _OnKeyDown(self, event):
         self._keyState = True
 
-    def _OnKeyReleased(self):
+    def _OnKeyReleased(self, event):
         self._keyState = False

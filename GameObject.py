@@ -1,4 +1,4 @@
-import GameCanvas
+from GameCanvas import GameCanvas
 
 class GameObject:
     

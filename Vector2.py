@@ -34,3 +34,15 @@ class Vector2 :
     
     def __truediv__(self, div):
         return Vector2(self.X / div, self.Y / div)
+    
+    def __iadd__(self, other):
+        return self.__add__(other)
+    
+    def __isub__(self, other):
+        return self.__sub__(other)
+    
+    def __imul__(self, mul):
+        return self.__mul__(mul)
+    
+    def __itruediv__(self, div):
+        return self.__truediv__(div)
