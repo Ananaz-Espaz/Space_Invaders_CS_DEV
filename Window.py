@@ -1,8 +1,10 @@
+from datetime import datetime
 from tkinter import Tk, Button, Label, StringVar, Canvas
 from Alien import Alien
 from GameCanvas import GameCanvas
 from Input import Input
 from Ship import Ship
+from Utils import Utils
 from Vector2 import Vector2
 
 #class window
@@ -15,6 +17,8 @@ class Window ( Tk ) :
 
         self.winWidth = winWidth
         self.winHeight = winHeight
+        
+        self.targetFPS = 120
         
     #widgets
     def create_widgets(self):
@@ -50,13 +54,13 @@ class Window ( Tk ) :
         self.RightInput = Input("<Right>", "<KeyRelease-Right>", self)
         self.LeftInput = Input("<Left>", "<KeyRelease-Left>", self)
         self.UpInput = Input("<Up>", "<KeyRelease-Up>", self)
-        self.RightInput = Input("<Down>", "<KeyRelease-Down>", self)
+        self.DownInput = Input("<Down>", "<KeyRelease-Down>", self)
         self.SpaceInput = Input("<space>", "<KeyRelease-space>", self)
 
     #start the game
     def start(self):
-
-        play_game = True
+        self.GameRunning = False
+        
         self.button_start.destroy()
         
         self.button_quit.anchor ('sw')
@@ -80,52 +84,62 @@ class Window ( Tk ) :
         self.life_label.grid ( row = 1, column = 6, padx = 1, pady = 1 )
         
         #canvas creation
-        game_zone = GameCanvas ( self, self.winWidth - 5, self.winHeight - 70, "black" )
-        game_zone.grid( row = 2, column = 1, columnspan= 10)
+        self.game_zone = GameCanvas ( self, self.winWidth - 5, self.winHeight - 70, "black" )
+        self.game_zone.grid( row = 2, column = 1, columnspan= 10)
 
         #spaceship
-        spaceship = Ship(game_zone, 0, Vector2(game_zone.w//2 , game_zone.h - 100), self.LeftInput, self.RightInput)
+        self.spaceship = Ship(self.game_zone, 0, Vector2(self.game_zone.w//2 , self.game_zone.h - 100), self.LeftInput, self.RightInput)
         
         #create alien list : one list with N alien level 1, one list with M alien level 2... -> compile list in an global list (for appear's probalility )
         list_level_alien = [ 10, 1 ]
-        list_alien = []
+        self.list_alien = []
         for j in range (5) :
-            list_alien += [Alien(0, Vector2((40 + 10) * i + 350, j * (40 + 10) + 100), game_zone) for i in range(list_level_alien[0])]
+            self.list_alien += [Alien(0, Vector2((40 + 10) * i + 350, j * (40 + 10) + 100), self.game_zone) for i in range(list_level_alien[0])]
         
         list_proba_red_alien = [0 for i in range (10)] + [1] #à déplacer dans la boucle de jeu + ne semble pas marcher
         
-        for i in range(len(list_proba_red_alien)):
-            if list_proba_red_alien[i] == 1 :
-                list_alien += [Alien(1, Vector2(10, 1040), game_zone)]
-        
-        # while play_game == True :
-        #     self.game_loop()
-            
-        #game_loop
+        # for i in range(len(list_proba_red_alien)):
+        #     if list_proba_red_alien[i] == 1 :
+        #         self.list_alien += [Alien(1, Vector2(10, 1040), self.game_zone)]
                 
-    def game_loop () :
-        pass
+        self._lastFrameDuration = 0
+        self.GameRunning = True
+        self.game_loop()
+                
+    def game_loop (self) :
+        if (not self.GameRunning):
+            return
+        
+        frameStart = datetime.now()
+        
+        self.spaceship.Update(self._lastFrameDuration)
+        
         # ennemy's mouvement
-        # for ennemy_i in list_alien :
-        #       if alien.ennemy_i.xposition == 0 or alien.ennemy.xposition == 1040 : # il faudrait récupérer le tag de l'alien parce que là ça ne marche pas
-        #          for ennemy_j in list_alien :
-        #             alien.ennemy_j.yposition += alien.speed
-        #     if alien.ennemy.yposition == spaceship.xposition : 
-        #           play_game = False
-        #          game_zone = game_zone.destroy ()
-        #         self.label_lose = Label ( game_zone, text = "Game Over")
-        #         self.label_1.grid ( row = 2, column = 1, padx = 3, pady = 8 )
-        #     alien.ennemy_i.xposition += alien.ennemy_i.speed
+        for alien in self.list_alien :
+            alien.Update(self._lastFrameDuration)
+            
+        Alien.OnFrameEnd()
+            
+        
+        frameDuration = (datetime.now() - frameStart).total_seconds()
+        self._lastFrameDuration = max(frameDuration, 1 / self.targetFPS)
+        after_id = self.after(int(Utils.Clamp(((1000 //self.targetFPS) - (frameDuration * 1000)), 0, (1000 // self.targetFPS))), self.game_loop)
         
         
         #shoot
         # shoot_list = []
         # if "<Space>" :
         #     shoot_list += [ shoot ( game_zone, spaceship ) ]
+        
+    def EndGame(self):
+        self.GameRunning
+        self.game_zone.delete()
+        self.label_lose = Label ( self.game_zone, text = "Game Over")
+        self.label_1.grid ( row = 2, column = 1, padx = 3, pady = 8 )
                 
     #quit the game
     def quit (self) :
-        play_game = False
+        self.GameRunning = False
         self = self.destroy ()
     
    
