@@ -13,7 +13,7 @@ class Ship (GameObject) :
         
         self.xsize = 40
         self.ysize = 40
-        self.speed = 10
+        self.speed = 200
         
         self._rightInput = rightInput
         self._leftInput = leftInput
@@ -35,8 +35,11 @@ class Ship (GameObject) :
 
     def Update(self, deltaTime : float):
         GameObject.Update(self, deltaTime)
-        input = Vector2(self._rightInput.FloatValue() - self._leftInput.FloatValue())
-        self.position += input * self.speed * deltaTime
+        input = Vector2(self._rightInput.FloatValue() - self._leftInput.FloatValue(), 0)
+        
+        self.position += input * (self.speed * deltaTime)
+        
+        self.Draw()
         
         
     def Draw(self):
@@ -47,7 +50,7 @@ class Ship (GameObject) :
         self._canvas.create_rectangle(
             self.position.X, 
             self.position.Y, 
-            self.position.Y + self.xsize, 
+            self.position.X + self.xsize, 
             self.position.Y + self.ysize, 
             fill='white', 
             tag=self._tag)
