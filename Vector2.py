@@ -20,14 +20,15 @@ class Vector2 :
     def Normalized(self) -> 'Vector2':
         return self / self.Magnitude()
         
-        
+    def __repr__(self) -> str:
+        return f"({self.X}, {self.Y})"
     
     # Operators
     def __add__(self, other):
-        return Vector2(self.X + other._x, self.Y + other._y)
+        return Vector2(self.X + other.X, self.Y + other.Y)
     
     def __sub__(self, other):
-        return Vector2(self.X - other._x, self.Y - other._y)
+        return Vector2(self.X - other.X, self.Y - other.Y)
     
     def __mul__(self, mul):
         return Vector2(self.X * mul, self.Y * mul)
@@ -46,3 +47,6 @@ class Vector2 :
     
     def __itruediv__(self, div):
         return self.__truediv__(div)
+    
+    def __neg__(self):
+        return Vector2(-self.X, -self.Y)
