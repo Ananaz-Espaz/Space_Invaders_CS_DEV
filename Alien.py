@@ -5,21 +5,24 @@ from Vector2 import Vector2
 #class alien
 class Alien (GameObject) :
     _nextAlienID = 0
-    _alienDirection = Vector2(1, 0)
-    _changeDirectionRequested = False
     
     #init
-    def __init__(self , level : int, initialPosition : Vector2, canvas : GameCanvas):
+    def __init__(self, canvas : GameCanvas, level : int, initialPosition : Vector2, group):
         GameObject.__init__(self, canvas)
         
         self.level = level
         
         self.position = initialPosition
+        self._group = group
 
         self._tag = f"alien{Alien._nextAlienID}"
         Alien._nextAlienID += 1
-
         
+        self.InitStates()
+        
+        self._heightOnStateEnter = self.position.Y
+        self._downMaxMovement = 50
+
         #alien's stats
         if self.level == 0 :
             self.damage = 1
@@ -44,44 +47,47 @@ class Alien (GameObject) :
             self.speed = 120
 
         self.Draw()
-    
-    #mouvement
-    def go_front ( self ):
-        if self.y + self.ysize == self.game_zone.h :   
-            self.destroy()
-        else :
-            self.y = self.y + self.speed
-        self.Draw()
-
-    def go_right ( self ):
-        if self.x + self.xsize == self.game_zone.w :
-            self.go_left ( self )
-        else :
-            self.x = self.x + self.speed
-        self.Draw()
-
-    def go_left ( self ):
-        if self.x == 0 :
-            self.go_right ( self )
-        else :
-            self.x = self.x - self.speed
-        self.Draw()
         
+    def InitStates(self):
+        self._states = {
+            0 : self.State0,
+            1 : self.State1,
+            2 : self.State2,
+            3 : self.State3}
 
     def Update(self, deltaTime : float):
         GameObject.Update(self, deltaTime)
-        self.position += Alien._alienDirection * self.speed * deltaTime
         
-        if (not(0 <= self.position.X <= 1040)):            
-            Alien.RequestDirectionChange()
+        self.position += self._states[self._group.CurrentState]() * self.speed * deltaTime
         
         self.Draw()
         
-        #   if alien.ennemy_i.xposition == 0 or alien.ennemy.xposition == 1040 : # il faudrait récupérer le tag de l'alien parce que là ça ne marche pas
-        #      for ennemy_j in list_alien :
-        #         alien.ennemy_j.yposition += alien.speed
-        # if alien.ennemy.yposition == spaceship.xposition : 
-        # alien.ennemy_i.xposition += alien.ennemy_i.speed
+    def OnGroupStateChanged(self):
+        self._heightOnStateEnter = self.position.Y
+        
+    # =>
+    def State0(self) -> Vector2:
+        if (self.position.X >= 1040):
+            self._group.RequestDirectionChange(1)
+        return Vector2(1, 0)
+    
+    # \/
+    def State1(self) -> Vector2:
+        if (abs(self._heightOnStateEnter - self.position.Y) >= self._downMaxMovement):
+            self._group.RequestDirectionChange(2)
+        return Vector2(0, 1)
+    
+    # <=
+    def State2(self) -> Vector2:
+        if (self.position.X <= 0):
+            self._group.RequestDirectionChange(3)
+        return Vector2(-1, 0)
+    
+    # \/
+    def State3(self) -> Vector2:
+        if (abs(self._heightOnStateEnter - self.position.Y) >= self._downMaxMovement):
+            self._group.RequestDirectionChange(0)
+        return Vector2(0, 1)
         
     def Draw(self):
         GameObject.Draw(self)
@@ -95,11 +101,4 @@ class Alien (GameObject) :
             fill=self.color, 
             tag=self._tag)
         
-    def RequestDirectionChange():
-        Alien._changeDirectionRequested = True
-        
-    def OnFrameEnd():
-        if(Alien._changeDirectionRequested):
-            Alien._alienDirection = -Alien._alienDirection
-            Alien._changeDirectionRequested = False
 

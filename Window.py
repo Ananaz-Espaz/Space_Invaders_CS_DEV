@@ -1,6 +1,7 @@
 from datetime import datetime
 from tkinter import Tk, Button, Label, StringVar, Canvas
 from Alien import Alien
+from AlienGroup import AlienGroup
 from GameCanvas import GameCanvas
 from Input import Input
 from Ship import Ship
@@ -39,16 +40,16 @@ class Window ( Tk ) :
         self.button_quit.anchor('n')
 
         #score label creation
-        var_score = StringVar(value = "Score : ") #definir une fonction de score + sauvegarde du score en fin de partie
-        self.score_label = Label(self, textvariable = var_score)
+        self.var_score = StringVar(value = "Score : ") #definir une fonction de score + sauvegarde du score en fin de partie
+        self.score_label = Label(self, textvariable = self.var_score)
         
         #time label creation
-        var_time = StringVar(value = "Time : ") #à faire autrement : definir une fonction de temps
-        self.time_label = Label(self, textvariable = var_time)
+        self.var_time = StringVar(value = "Time : ") #à faire autrement : definir une fonction de temps
+        self.time_label = Label(self, textvariable = self.var_time)
         
         #live label creation
-        var_life = StringVar(value = "Life.s : ") # à mettre dans les events de touche du vaisseau
-        self.life_label = Label(self, textvariable = var_life)
+        self.var_life = StringVar(value = "Life.s : ") # à mettre dans les events de touche du vaisseau
+        self.life_label = Label(self, textvariable = self.var_life)
         
     def CreateInputs(self):
         self.RightInput = Input("<Right>", "<KeyRelease-Right>", self)
@@ -72,15 +73,15 @@ class Window ( Tk ) :
         self.button_quit.grid ( row = 1, column = 9, padx = 1, pady = 1 )
         
         # score label display
-        var_score = 0
+        self.var_score = 0
         self.score_label.grid ( row = 1, column = 2, padx = 1, pady = 1 )
         
         # time label display
-        var_time = 0
+        self.var_time = 0
         self.time_label.grid ( row = 1, column = 4 , padx = 1, pady = 1 )
         
         # life label display
-        var_life = 0
+        self.var_life = 0
         self.life_label.grid ( row = 1, column = 6, padx = 1, pady = 1 )
         
         #canvas creation
@@ -92,9 +93,10 @@ class Window ( Tk ) :
         
         #create alien list : one list with N alien level 1, one list with M alien level 2... -> compile list in an global list (for appear's probalility )
         list_level_alien = [ 10, 1 ]
-        self.list_alien = []
-        for j in range (5) :
-            self.list_alien += [Alien(0, Vector2((40 + 10) * i + 350, j * (40 + 10) + 100), self.game_zone) for i in range(list_level_alien[0])]
+        
+        self._alienGroups = []
+        aliensPosition = [Vector2(50 * i + 450, 50 * j + 100) for i in range(list_level_alien[0]) for j in range(5)]
+        self._alienGroups.append(AlienGroup(self.game_zone, 0, aliensPosition))
         
         list_proba_red_alien = [0 for i in range (10)] + [1] #à déplacer dans la boucle de jeu + ne semble pas marcher
         
@@ -115,12 +117,11 @@ class Window ( Tk ) :
         self.spaceship.Update(self._lastFrameDuration)
         
         # ennemy's mouvement
-        for alien in self.list_alien :
-            alien.Update(self._lastFrameDuration)
+        for group in self._alienGroups :
+            group.Update(self._lastFrameDuration)
             
-        Alien.OnFrameEnd()
             
-        
+            
         frameDuration = (datetime.now() - frameStart).total_seconds()
         self._lastFrameDuration = max(frameDuration, 1 / self.targetFPS)
         after_id = self.after(int(Utils.Clamp(((1000 //self.targetFPS) - (frameDuration * 1000)), 0, (1000 // self.targetFPS))), self.game_loop)
@@ -132,7 +133,7 @@ class Window ( Tk ) :
         #     shoot_list += [ shoot ( game_zone, spaceship ) ]
         
     def EndGame(self):
-        self.GameRunning
+        self.GameRunning = False
         self.game_zone.delete()
         self.label_lose = Label ( self.game_zone, text = "Game Over")
         self.label_1.grid ( row = 2, column = 1, padx = 3, pady = 8 )
