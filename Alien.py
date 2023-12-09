@@ -1,5 +1,6 @@
 from GameObject import GameObject
 from GameCanvas import GameCanvas
+from Layer import Layer
 from Vector2 import Vector2
 
 #class alien
@@ -8,43 +9,39 @@ class Alien (GameObject) :
     
     #init
     def __init__(self, canvas : GameCanvas, level : int, initialPosition : Vector2, group):
-        GameObject.__init__(self, canvas)
         
         self.level = level
         
-        self.position = initialPosition
         self._group = group
-
-        self._tag = f"alien{Alien._nextAlienID}"
-        Alien._nextAlienID += 1
         
         self.InitStates()
         
-        self._heightOnStateEnter = self.position.Y
         self._downMaxMovement = 50
 
+        size = Vector2(0, 0)
         #alien's stats
         if self.level == 0 :
             self.damage = 1
             self.life = 1
             self.color = 'lightblue'
-            self.xsize = 40
-            self.ysize = 40
+            size = Vector2(40, 40)
             self.speed = 120
         elif self.level == 1 :
             self.dammage = 1
             self.life = 1
             self.color = 'red'
-            self.xsize = 60
-            self.ysize = 40
+            size = Vector2(60, 40)
             self.speed = 120
         else:
             self.dammage = 0
             self.life = 1
             self.color = 'white'
-            self.xsize = 40
-            self.ysize = 40
+            size = Vector2(40, 40)
             self.speed = 120
+            
+        super().__init__(canvas, initialPosition, size, f"Alien#{Alien._nextAlienID}", Layer.Alien)
+        Alien._nextAlienID += 1
+        self._heightOnStateEnter = self.position.Y
 
         self.Draw()
         
@@ -56,7 +53,7 @@ class Alien (GameObject) :
             3 : self.State3}
 
     def Update(self, deltaTime : float):
-        GameObject.Update(self, deltaTime)
+        super().Update(deltaTime)
         
         self.position += self._states[self._group.CurrentState]() * self.speed * deltaTime
         
@@ -65,6 +62,15 @@ class Alien (GameObject) :
     def OnGroupStateChanged(self):
         self._heightOnStateEnter = self.position.Y
         
+    def OnCollisionEnter(self, other: GameObject):
+        super().OnCollisionEnter(other)
+        self.life -= 1
+        if (self.life <= 0):
+            self.Destroy()
+        
+    def Destroy(self):
+        super().Destroy()
+        self._group.OnAlienDestroyed(self)
     # =>
     def State0(self) -> Vector2:
         if (self.position.X >= 1040):
@@ -90,14 +96,12 @@ class Alien (GameObject) :
         return Vector2(0, 1)
         
     def Draw(self):
-        GameObject.Draw(self)
-        
-        self._canvas.delete(self._tag)
+        super().Draw()
         self._canvas.create_rectangle(
             self.position.X, 
             self.position.Y, 
-            self.position.X + self.xsize, 
-            self.position.Y + self.ysize, 
+            self.position.X + self.size.X, 
+            self.position.Y + self.size.Y, 
             fill=self.color, 
             tag=self._tag)
         

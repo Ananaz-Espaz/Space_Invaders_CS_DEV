@@ -12,7 +12,7 @@ from Vector2 import Vector2
 class Window ( Tk ) :
     #init
     def __init__ ( self, winWidth : int, winHeight : int) :
-        Tk.__init__ ( self )
+        super().__init__ ()
         self.create_widgets()
         self.CreateInputs()
 
@@ -89,7 +89,7 @@ class Window ( Tk ) :
         self.game_zone.grid( row = 2, column = 1, columnspan= 10)
 
         #spaceship
-        self.spaceship = Ship(self.game_zone, 0, Vector2(self.game_zone.w//2 , self.game_zone.h - 100), self.LeftInput, self.RightInput)
+        self.spaceship = Ship(self.game_zone, 0, Vector2(self.game_zone.w/2 , self.game_zone.h - 100), self.LeftInput, self.RightInput, self.SpaceInput)
         
         #create alien list : one list with N alien level 1, one list with M alien level 2... -> compile list in an global list (for appear's probalility )
         list_level_alien = [ 10, 1 ]
@@ -115,6 +115,7 @@ class Window ( Tk ) :
         frameStart = datetime.now()
         
         self.spaceship.Update(self._lastFrameDuration)
+            
         
         # ennemy's mouvement
         for group in self._alienGroups :
@@ -124,9 +125,8 @@ class Window ( Tk ) :
             
         frameDuration = (datetime.now() - frameStart).total_seconds()
         self._lastFrameDuration = max(frameDuration, 1 / self.targetFPS)
-        after_id = self.after(int(Utils.Clamp(((1000 //self.targetFPS) - (frameDuration * 1000)), 0, (1000 // self.targetFPS))), self.game_loop)
-        
-        
+        after_id = self.after(int(Utils.Clamp(((1 / self.targetFPS) - frameDuration), 0.001, (1 / self.targetFPS)) * 1000), self.game_loop)
+          
         #shoot
         # shoot_list = []
         # if "<Space>" :

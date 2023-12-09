@@ -13,19 +13,21 @@ class AlienGroup():
         # State 3 : \/
         self.CurrentState = startState
         self.NextStateRequests = []
-        
         pass
     
     def Update(self, deltaTime : float):
         for alien in self._aliens:
             alien.Update(deltaTime)
             
-        self.AfterUpdate()
+        self.ComputeNextState()
+        
+    def OnAlienDestroyed(self, alien : Alien):
+        self._aliens.remove(alien)
     
     def RequestDirectionChange(self, requestedState : int):
         self.NextStateRequests.append(requestedState)
         
-    def AfterUpdate(self):
+    def ComputeNextState(self):
         if (len(self.NextStateRequests) == 0):
             return
         
