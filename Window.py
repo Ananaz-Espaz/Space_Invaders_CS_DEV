@@ -96,7 +96,7 @@ class Window ( Tk ) :
         
         self._alienGroups = []
         aliensPosition = [Vector2(50 * i + 450, 50 * j + 100) for i in range(list_level_alien[0]) for j in range(5)]
-        self._alienGroups.append(AlienGroup(self.game_zone, 0, aliensPosition))
+        self._alienGroups.append(AlienGroup(self.game_zone, self, 0, aliensPosition))
         
         list_proba_red_alien = [0 for i in range (10)] + [1] #à déplacer dans la boucle de jeu + ne semble pas marcher
         
@@ -131,6 +131,9 @@ class Window ( Tk ) :
         # shoot_list = []
         # if "<Space>" :
         #     shoot_list += [ shoot ( game_zone, spaceship ) ]
+        
+    def OnGroupDestroyed(self):
+        pass
         
     def EndGame(self):
         self.GameRunning = False

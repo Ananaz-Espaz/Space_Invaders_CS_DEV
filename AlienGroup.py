@@ -4,9 +4,10 @@ from Vector2 import Vector2
 
 
 class AlienGroup():
-    def __init__(self, canvas : GameCanvas, aliensLevel : int, aliensStartPositions : list[Vector2], startState : int = 0) -> None:
+    def __init__(self, canvas : GameCanvas, owner, aliensLevel : int, aliensStartPositions : list[Vector2], startState : int = 0) -> None:
         self._aliens = [Alien(canvas, aliensLevel, pos, self) for pos in aliensStartPositions]
-        
+        self._aliensAliveCount = len(aliensStartPositions)
+        self._owner = owner
         # State 0 : =>
         # State 1 : \/
         # State 2 : <=
@@ -23,6 +24,9 @@ class AlienGroup():
         
     def OnAlienDestroyed(self, alien : Alien):
         self._aliens.remove(alien)
+        self._aliensAliveCount -= 1
+        if (self._aliensAliveCount <= 0):
+            self._owner.OnGroupDestroyed()
     
     def RequestDirectionChange(self, requestedState : int):
         self.NextStateRequests.append(requestedState)
